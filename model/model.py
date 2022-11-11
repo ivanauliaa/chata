@@ -1,3 +1,4 @@
+import string
 import math
 import pandas as pd
 import numpy as np
@@ -5,10 +6,31 @@ from collections import Iterable
 
 class Model:
   def __init__(self, docs, responses):
-    self.docs = docs
+    self.docs = [self.preprocessing(doc) for doc in docs]
     self.responses = responses
 
+  def preprocessing(self, text):
+    # case folding (lowercase)
+    text = text.lower()
+
+    # remove punctuation
+    text = text.translate(str.maketrans(dict.fromkeys(string.punctuation)))
+
+    # trim unnecessary space
+    text = text.strip()
+
+    # tokenize
+    tokenized = text.split()
+
+    # TODO: remove stopword
+
+    # TODO: stem and lemmatize
+
+    return ' '.join(tokenized)
+
   def predict(self, query):
+    query = self.preprocessing(query)
+
     self.tf_doc = self.compute_normalizedtf(self.docs)
     self.idf_dict = self.compute_idf(self.docs)
 
