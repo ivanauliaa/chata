@@ -29,12 +29,12 @@
 
             <div class="msg-bubble">
                 <div class="msg-info">
-                    <div class="msg-info-name">Chatbot</div>
-                    <div class="msg-info-time">12:45</div>
+                    <div class="msg-info-name"></div>
+                    <div class="msg-info-time"></div>
                 </div>
 
                 <div class="msg-text">
-                    Hi 👋
+                    Hi 👋, apakah ada yang bisa dibantu?
                 </div>
             </div>
         </div>
@@ -53,16 +53,22 @@
     const msgerInput = get(".msger-input");
     const msgerChat = get(".msger-chat");
 
+    // set active cursor on message input
+    msgerInput.focus();
+
     // Icons made by Freepik from www.flaticon.com
     const BOT_IMG = "https://image.flaticon.com/icons/svg/327/327779.svg";
     const PERSON_IMG = "https://image.flaticon.com/icons/svg/145/145867.svg";
     const BOT_NAME = "Chata!";
     const PERSON_NAME = "You";
 
+    document.querySelector('.msg-info-name').textContent = BOT_NAME;
+    document.querySelector('.msg-info-time').textContent = formatDate(new Date());
+
     msgerForm.addEventListener("submit", event => {
         event.preventDefault();
 
-        const msgText = msgerInput.value;
+        const msgText = msgerInput.value.trim();
         if (!msgText) return;
 
         appendMessage(PERSON_NAME, PERSON_IMG, "right", msgText);
