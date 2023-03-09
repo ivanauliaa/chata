@@ -2,10 +2,19 @@ import string
 import math
 import pandas as pd
 import numpy as np
-from collections import Iterable
+from collections.abc import Iterable
+from config.env import env
+from Sastrawi.Stemmer.StemmerFactory import StemmerFactory
 
 class Model:
   def __init__(self, docs, responses):
+    self.stopwords = []
+    with open(env.STOPWORDS_PATH) as f:
+      for line in f:
+        self.stopwords.append(line.strip())
+
+    self.dictionary_df = pd.read_csv(f'{env.DICTIONARY_PATH}')
+
     self.docs = [self.preprocessing(doc) for doc in docs]
     self.responses = responses
 
@@ -22,9 +31,16 @@ class Model:
     # tokenize
     tokenized = text.split()
 
-    # TODO: remove stopword
+    # slang word conversion
+    tokenized = [self.dictionary_df.loc[self.dictionary_df[env.SLANG_WORD_COL] == token, env.FORMAL_WORD_COL].iloc[0] if token in self.dictionary_df[env.SLANG_WORD_COL].values else token for token in tokenized]
 
-    # TODO: stem and lemmatize
+    # remove stopwords
+    tokenized = [token for token in tokenized if token not in self.stopwords]
+
+    # stem and lemmatize
+    factory = StemmerFactory()
+    stemmer = factory.create_stemmer()
+    tokenized = [stemmer.stem(token) for token in tokenized]
 
     return ' '.join(tokenized)
 
@@ -40,7 +56,7 @@ class Model:
     self.tfidf_dict_qry = self.compute_query_tfidf(query)
 
     similarity_docs = list(self.flatten(self.rank_similarity_docs(query, self.docs)))
-    max_index = self.get_max_value_index(similarity_docs)
+    max_index = self.get_max_value_index(similarity_docs) 
 
     if similarity_docs[max_index] < 0.3:
       return 'Tidak dapat memahami permintaan anda'

@@ -24,20 +24,6 @@
     </header>
 
     <main class="msger-chat">
-        <div class="msg left-msg">
-            <div class="msg-img" style="background-image: url(https://image.flaticon.com/icons/svg/327/327779.svg)"></div>
-
-            <div class="msg-bubble">
-                <div class="msg-info">
-                    <div class="msg-info-name"></div>
-                    <div class="msg-info-time"></div>
-                </div>
-
-                <div class="msg-text">
-                    Hi 👋, apakah ada yang bisa dibantu?
-                </div>
-            </div>
-        </div>
 
     </main>
 
@@ -62,19 +48,53 @@
     const BOT_NAME = "Chata!";
     const PERSON_NAME = "You";
 
-    document.querySelector('.msg-info-name').textContent = BOT_NAME;
-    document.querySelector('.msg-info-time').textContent = formatDate(new Date());
+    const categories = ['Informasi Umum PENS', 'Informasi Akademik', 'Informasi PMB PENS', 'Peraturan Akademik PENS'];
+    let selectedCategory = 0;
 
-    msgerForm.addEventListener("submit", event => {
+    const welcomeMessage = 'Hi 👋, apakah ada yang bisa dibantu?';
+    const statusMessage = () => `
+        Saat ini anda sedang berada dalam kategori ${categories[selectedCategory]}.<br>
+        Untuk mengganti jenis pertanyaan, silahkan ketik angka:<br>
+        [1] ${categories[0]}<br>
+        [2] ${categories[1]}<br>
+        [3] ${categories[2]}<br>
+        [4] ${categories[3]}<br>
+    `;
+    const successSwitchMessage = (msg) => `Berhasil mengganti jenis pertanyaan ke ${msg}`;
+    const failSwitchMessage = (category) => `Kategori jenis pertanyaan ${category} tidak dikenali`;
+
+    const init = (event) => {
+        appendMessage(BOT_NAME, BOT_IMG, "left", welcomeMessage);
+        appendMessage(BOT_NAME, BOT_IMG, "left", statusMessage());
+    };
+    window.addEventListener("load", init);
+
+    const submitHandler = async (event) => {
         event.preventDefault();
 
         const msgText = msgerInput.value.trim();
         if (!msgText) return;
-
+        
         appendMessage(PERSON_NAME, PERSON_IMG, "right", msgText);
         msgerInput.value = "";
-        botResponse(msgText);
-    });
+
+        console.log(msgText);
+        let response = '';
+        if (!isNaN(msgText)) {
+            if (msgText >= 1 && msgText <= categories.length) {
+                selectedCategory = msgText - 1;
+                response = successSwitchMessage(categories[selectedCategory]);
+            } else {
+                response = failSwitchMessage(msgText);
+            }
+        } else {
+            response = await botResponse(selectedCategory, msgText);
+        }
+
+        appendMessage(BOT_NAME, BOT_IMG, "left", response);
+        appendMessage(BOT_NAME, BOT_IMG, "left", statusMessage());
+    };
+    msgerForm.addEventListener("submit", submitHandler);
 
     function appendMessage(name, img, side, text) {
         //   Simple solution for small apps
@@ -97,15 +117,9 @@
         msgerChat.scrollTop += 500;
     }
 
-    function botResponse(rawText) {
+    async function botResponse(category, msg) {
         // Bot Response
-        $.get("/get", { msg: rawText }).done(function (data) {
-            console.log(rawText);
-            console.log(data);
-            const msgText = data;
-            appendMessage(BOT_NAME, BOT_IMG, "left", msgText);
-
-        });
+        return $.get("/get", { category, msg });
     }
 
     // Utils
